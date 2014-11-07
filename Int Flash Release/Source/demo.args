@@ -1,0 +1,41 @@
+-mcpu=cortex-m4
+-mthumb
+-mfloat-abi=softfp
+-mfpu=fpv4-sp-d16
+-g3
+-gdwarf-2
+-gstrict-dwarf
+-gstrict-dwarf
+-gstrict-dwarf
+-nostdinc
+-DMQX_ROOT_DIR=C:/Freescale/Freescale_MQX_4_1_FRDMK64F/mfs/examples/sdcard/build/cw10gcc/mfs_sdcard_frdmk64f/../../../../../..
+-D__VFPV4__=1
+-D_EWL_C99=1
+-I"C:/Freescale/CW MCU v10.6/MCU/ProcessorExpert/lib/Kinetis/pdd_100331/inc"
+-I"C:/Freescale/Freescale_MQX_4_1_FRDMK64F/lib/frdmk64f.cw10gcc/release/bsp/Generated_Code"
+-I"C:/Freescale/Freescale_MQX_4_1_FRDMK64F/lib/frdmk64f.cw10gcc/release/bsp/Sources"
+-I"C:/Freescale/Freescale_MQX_4_1_FRDMK64F/lib/frdmk64f.cw10gcc/release"
+-I"C:/Freescale/Freescale_MQX_4_1_FRDMK64F/lib/frdmk64f.cw10gcc/release/bsp"
+-I"C:/Freescale/Freescale_MQX_4_1_FRDMK64F/lib/frdmk64f.cw10gcc/release/psp"
+-I"C:/Freescale/Freescale_MQX_4_1_FRDMK64F/lib/frdmk64f.cw10gcc/release/mfs"
+-I"C:/Freescale/Freescale_MQX_4_1_FRDMK64F/lib/frdmk64f.cw10gcc/release/shell"
+-I"C:/Freescale/CW MCU v10.6/MCU/ARM_GCC_Support/ewl/EWL_C/include"
+-I"C:/Freescale/CW MCU v10.6/MCU/ARM_GCC_Support/ewl/EWL_Runtime/include"
+-Os
+-ffunction-sections
+-fdata-sections
+-Wall
+-std=gnu99
+-c
+-fmessage-length=0 
+-fno-strict-aliasing  
+-Wno-missing-braces  
+-Wno-switch  
+-Wno-unused-value  
+-Wno-unused-variable  
+-Wno-unused-but-set-variable  
+-Wno-pointer-to-int-cast  
+-Wno-unused-function  
+-Wno-unused-label  
+-Wno-char-subscripts  
+-Wno-int-to-pointer-cast

@@ -39,6 +39,6 @@ void Gps_vProcessPosition(void);
 
 void Gps_vCalculateHeading(void);
 
-unsigned char Gps_u8ComputeChecksum(char *sNmeaSentence);
+uint8_t Gps_u8ComputeChecksum(char *sNmeaSentence);
 
 #endif /* GPS_H_ */

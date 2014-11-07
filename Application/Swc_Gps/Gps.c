@@ -42,6 +42,7 @@ void Gps_vCalculateHeading(void)
 {
 	
 }
+
 uint8_t Gps_u8ComputeChecksum(char *sNmeaSentence)
 {
 	unsigned char u8Checksumn=0;

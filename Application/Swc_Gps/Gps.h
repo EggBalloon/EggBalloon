@@ -10,13 +10,6 @@
 
 #include "Sci.h"
 
-#if 0
-"PMTK000*"		/* Test commend */,
-"PMTK220,200*"	/*Fix update rate in ms*/,
-"PMTK300,200*"	/*Fix control rate in ms*/,
-"PMTK397,0.2*"	/*Navigation speed threshold in m/s */,
-"PMTK527,0.20*"	/*Current Navigation speed threshold in m/s */,
-#endif
 typedef enum{
 	enTest=0,
 	enFixUpdateDate,

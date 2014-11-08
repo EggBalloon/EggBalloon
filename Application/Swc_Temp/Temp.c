@@ -9,5 +9,5 @@
 
 void Temp_Read(void)
 {
-	
+	//read temp
 }

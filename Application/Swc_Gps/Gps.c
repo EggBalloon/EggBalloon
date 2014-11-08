@@ -18,19 +18,25 @@ void Gps_vDeInit(void)
 	
 }
 
-void Gps_u16GetDirection(void)
+uint16_t Gps_u16GetDirection(void)
 {
+	uint16_t u16RetVal=0;
 	
+	return u16RetVal;
 }
 
-void Gps_boDetectModule(void)
+bool Gps_boDetectModule(void)
 {
+	bool boRetVal=0;
 	
+	return boRetVal;	
 }
 
-void Gps_u16GetDestDirection(void)
+uint16_t Gps_u16GetDestDirection(void)
 {
+	uint16_t u16RetVal=0;
 	
+	return u16RetVal;
 }
 
 void Gps_vProcessPosition(void)

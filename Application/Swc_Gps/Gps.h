@@ -22,11 +22,11 @@ void Gps_vInit(void);
 
 void Gps_vDeInit(void);
 
-void Gps_u16GetDirection(void);
+uint16_t Gps_u16GetDirection(void);
 
-void Gps_boDetectModule(void);
+bool Gps_boDetectModule(void);
 
-void Gps_u16GetDestDirection(void);
+uint16_t Gps_u16GetDestDirection(void);
 
 void Gps_vProcessPosition(void);
 

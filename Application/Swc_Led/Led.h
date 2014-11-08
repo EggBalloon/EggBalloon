@@ -8,9 +8,24 @@
 #ifndef LED_H_
 #define LED_H_
 
-#include "Dio.h"
+#include <mqx.h>
+#include <bsp.h>
+#include <fio.h>
 
-void Led_vSetColor(void);
+typedef enum _tenLedColors
+{
+	enLedColorOff=0,
+	enLedColorRed,
+	enLedColorGreen,
+	enLedColorYellow,
+	enLedColorBlue,
+	enLedColorMagenta,
+	enLedColorCyan,
+	enLedColorWhite,
+	enLedColorError	
+}LED_tenLedColors;
+
+void Led_vSetColor(LED_tenLedColors enColor);
 
 void Led_vToggle(void);
 

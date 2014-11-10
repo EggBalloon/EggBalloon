@@ -34,7 +34,10 @@ Provide MFS file system on external SD card.
 #include <part_mgr.h>
 #include "Temp.h"
 #include "Dio.h"
+#include "Sci.h"
+
 #include "Led.h"
+#include "Gps.h"
 
 #if ! SHELLCFG_USES_MFS
 #error "This application requires SHELLCFG_USES_MFS defined non-zero in user_config.h. Please recompile libraries with this option."
@@ -62,29 +65,10 @@ Provide MFS file system on external SD card.
 
 #define TD_STRUCT_PTR void *
 
-static LWGPIO_STRUCT stLedRed;
-static LWGPIO_STRUCT stLedGreen;
-static LWGPIO_STRUCT stLedBlue;
-
-#define BSP_RGBRED                    (GPIO_PORT_B | GPIO_PIN22)
-#define BSP_RGBRED_MUX_GPIO           (LWGPIO_MUX_B22_GPIO)
-
-#define BSP_RGBGREEN                  (GPIO_PORT_E | GPIO_PIN26)
-#define BSP_RGBGREEN_MUX_GPIO         (LWGPIO_MUX_E26_GPIO)
-
-#define BSP_RGBBLUE                   (GPIO_PORT_B | GPIO_PIN21)
-#define BSP_RGBBLUE_MUX_GPIO          (LWGPIO_MUX_B21_GPIO)
-
-#define	LED_OFF	(LWGPIO_VALUE_HIGH)
-#define	LED_ON	(LWGPIO_VALUE_LOW)
-
 _task_id motorId, readId, SdCardId;
 
-static LWGPIO_STRUCT stLedRed;
-static LWGPIO_STRUCT stLedGreen;
-static LWGPIO_STRUCT stLedBlue;
-
 bool boBlueInit;
+static Gps_tstPosition stCurrentPosition;
 
 void init_task(uint32_t);
 void motor_task(uint32_t);
@@ -114,10 +98,15 @@ void init_task(uint32_t temp)
 	_task_id init_taskId;
     (void)temp; /* suppress 'unused variable' warning */
     
-    /* Place initialization here */
+    /* Place MCAL initialization here */
     Adc_Init();
     Dio_Init();
+    Sci_Init();
     
+    _time_delay(100);
+    
+    /* Place SWC initializations here */
+    Gps_vInit();
 #if 0
 	if (!lwgpio_init(&stLedBlue, BSP_RGBBLUE, LWGPIO_DIR_OUTPUT, LED_OFF))
 	{
@@ -167,12 +156,12 @@ void read_task(uint32_t temp)
     	if(FALSE == boTemp)
     	{
     		boTemp = TRUE;
-    		Led_vSetColor(enLedColorBlue);
+    		/*Led_vSetColor(enLedColorBlue);*/
     	}else
     	{
     		Led_vToggle();
     	}
-    	    
+    	 Gps_vProcessPosition(&stCurrentPosition);   
     	 /* Run the shell on the serial port */
     	 printf("Read Task\n");
     	

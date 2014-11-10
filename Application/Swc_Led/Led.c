@@ -12,10 +12,10 @@
 #define	LEDS_GREEN_MSK	(0x02)
 #define	LEDS_BLUE_MSK	(0x04)
 
-static LWGPIO_VALUE enRed;
-static LWGPIO_VALUE enGreen;
-static LWGPIO_VALUE enBlue;
-static bool LED__boToggle=FALSE; 
+static LWGPIO_VALUE enRed	= PORT_OFF;
+static LWGPIO_VALUE enGreen	= PORT_OFF;
+static LWGPIO_VALUE enBlue	= PORT_OFF;
+static bool LED__boToggle	= FALSE; 
 
 void Led_vSetColor(LED_tenLedColors enColor)
 {

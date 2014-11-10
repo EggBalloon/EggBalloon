@@ -12,7 +12,7 @@
 #include "Dio.h"
 #include "Pwm.h"
 
-void Analog_Read(void);
+uint32_t Analog_Read(void);
 
 void Digital_Write(void);
 

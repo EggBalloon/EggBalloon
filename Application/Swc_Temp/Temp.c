@@ -7,7 +7,15 @@
 
 #include "Temp.h"
 
-void Temp_Read(void)
+uint32_t Temp_Read(void)
 {
-	//read temp
+	uint32_t temperature;
+	uint32_t adcValue;
+
+	adcValue = Analog_Read();
+
+	temperature = (M1 - (adcValue - VTEMP25_ADC) * M2)/K;
+
+
+	return temperature;
 }

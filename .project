@@ -85,14 +85,9 @@
 			<locationURI>virtual:/virtual</locationURI>
 		</link>
 		<link>
-			<name>Source/LED</name>
-			<type>2</type>
-			<locationURI>virtual:/virtual</locationURI>
-		</link>
-		<link>
 			<name>Source/demo.c</name>
 			<type>1</type>
-			<locationURI>PARENT-3-PROJECT_LOC/demo.c</locationURI>
+			<location>C:/Freescale/Freescale_MQX_4_1_FRDMK64F/mfs/examples/sdcard/build/cw10gcc/mfs_sdcard_frdmk64f/Application/demo.c</location>
 		</link>
 	</linkedResources>
 	<variableList>

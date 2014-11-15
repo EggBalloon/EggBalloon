@@ -33,7 +33,15 @@ Provide MFS file system on external SD card.
 #include <spi.h>
 #include <part_mgr.h>
 #include "Temp.h"
+<<<<<<< .merge_file_a04888
 #include "Os.h"
+=======
+#include "Dio.h"
+#include "Sci.h"
+
+#include "Led.h"
+#include "Gps.h"
+>>>>>>> .merge_file_a05260
 
 #if ! SHELLCFG_USES_MFS
 #error "This application requires SHELLCFG_USES_MFS defined non-zero in user_config.h. Please recompile libraries with this option."
@@ -60,29 +68,10 @@ Provide MFS file system on external SD card.
 #endif
 
 
-static LWGPIO_STRUCT stLedRed;
-static LWGPIO_STRUCT stLedGreen;
-static LWGPIO_STRUCT stLedBlue;
-
-#define BSP_RGBRED                    (GPIO_PORT_B | GPIO_PIN22)
-#define BSP_RGBRED_MUX_GPIO           (LWGPIO_MUX_B22_GPIO)
-
-#define BSP_RGBGREEN                  (GPIO_PORT_E | GPIO_PIN26)
-#define BSP_RGBGREEN_MUX_GPIO         (LWGPIO_MUX_E26_GPIO)
-
-#define BSP_RGBBLUE                   (GPIO_PORT_B | GPIO_PIN21)
-#define BSP_RGBBLUE_MUX_GPIO          (LWGPIO_MUX_B21_GPIO)
-
-#define	LED_OFF	(LWGPIO_VALUE_HIGH)
-#define	LED_ON	(LWGPIO_VALUE_LOW)
-
 _task_id motorId, readId, SdCardId;
 
-static LWGPIO_STRUCT stLedRed;
-static LWGPIO_STRUCT stLedGreen;
-static LWGPIO_STRUCT stLedBlue;
-
 bool boBlueInit;
+static Gps_tstPosition stCurrentPosition;
 
 void init_task(uint32_t);
 void motor_task(uint32_t);
@@ -93,9 +82,9 @@ const TASK_TEMPLATE_STRUCT  MQX_template_list[] =
 {
    /* Task Index,   Function,     Stack,  Priority, Name,     Attributes,          Param, Time Slice */
 	{ 4,            init_task,    1500,    10,     "Init",  MQX_AUTO_START_TASK, 0,     0 },
-	{ 3,            motor_task,   3000,    12,     "Motor",  0, 0,     0 },
-    { 2,            read_task,    3000,    11,     "Read",   0, 0,     0 },
-    { 1,            sdcard_task,  2000,    12,     "SDcard", 0, 0,     0 },
+	{ 3,            motor_task,   3000,    12,     "Motor",                   0, 0,     0 },
+    { 2,            read_task,    3000,    11,     "Read",                    0, 0,     0 },
+    { 1,            sdcard_task,  2000,    12,     "SDcard",                  0, 0,     0 },
     { 0 }
 };
 
@@ -111,8 +100,17 @@ void init_task(uint32_t temp)
 {
 	_task_id init_taskId;
     (void)temp; /* suppress 'unused variable' warning */
-    Adc_Init();
     
+    /* Place MCAL initialization here */
+    Adc_Init();
+    Dio_Init();
+    Sci_Init();
+    
+    _time_delay(100);
+    
+    /* Place SWC initializations here */
+    Gps_vInit();
+#if 0
 	if (!lwgpio_init(&stLedBlue, BSP_RGBBLUE, LWGPIO_DIR_OUTPUT, LED_OFF))
 	{
 		printf("...RED LED failed!!\n");
@@ -122,7 +120,7 @@ void init_task(uint32_t temp)
 		printf("R");
 		lwgpio_set_functionality(&stLedBlue, BSP_RGBBLUE_MUX_GPIO);
 	}
-    
+#endif    
     init_taskId=_task_get_id();
     /* Run the shell on the serial port */
     printf("Demo Initialized\n");
@@ -143,6 +141,7 @@ void init_task(uint32_t temp)
 *END------------------------------------------------------------------*/
 void read_task(uint32_t temp)
 {
+	bool boTemp=FALSE;
     (void)temp; /* suppress 'unused variable' warning */
     _task_id motor_Id, sdcard_Id;
     TD_STRUCT_PTR motor_ptr;
@@ -155,10 +154,17 @@ void read_task(uint32_t temp)
     motor_ptr = _task_get_td(motor_Id);
     sdcard_ptr = _task_get_td(sdcard_Id);
         
-    for(;;){
-    	
-    	 lwgpio_toggle_value(&stLedBlue);
-    	    
+    for(;;)
+    {
+    	if(FALSE == boTemp)
+    	{
+    		boTemp = TRUE;
+    		/*Led_vSetColor(enLedColorBlue);*/
+    	}else
+    	{
+    		Led_vToggle();
+    	}
+    	 Gps_vProcessPosition(&stCurrentPosition);   
     	 /* Run the shell on the serial port */
     	 printf("Read Task\n");
     	

@@ -33,6 +33,7 @@ Provide MFS file system on external SD card.
 #include <spi.h>
 #include <part_mgr.h>
 #include "Temp.h"
+#include "Os.h"
 
 #if ! SHELLCFG_USES_MFS
 #error "This application requires SHELLCFG_USES_MFS defined non-zero in user_config.h. Please recompile libraries with this option."
@@ -58,7 +59,6 @@ Provide MFS file system on external SD card.
 #error "SDCARD low level communication device not defined!"
 #endif
 
-#define TD_STRUCT_PTR void *
 
 static LWGPIO_STRUCT stLedRed;
 static LWGPIO_STRUCT stLedGreen;
@@ -127,9 +127,9 @@ void init_task(uint32_t temp)
     /* Run the shell on the serial port */
     printf("Demo Initialized\n");
     
-    motorId =  _task_create_blocked(0, 3, 0);
-    SdCardId = _task_create_blocked(0, 1, 0);
-    readId  =  _task_create(0, 2, 0);
+    motorId =  OS_CreateTaskBlocked(0, 3, 0);
+    SdCardId = OS_CreateTaskBlocked(0, 1, 0);
+    readId  =  OS_CreateTask(0, 2, 0);
     _task_destroy(init_taskId);
     
 }

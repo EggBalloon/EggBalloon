@@ -9,6 +9,7 @@
 
 void Adc_Init(void)
 {
+	/*Configure ADC module to read internal temp sensor*/
 	ADC0_SC1A=0;	
 	
 }

@@ -33,15 +33,14 @@ Provide MFS file system on external SD card.
 #include <spi.h>
 #include <part_mgr.h>
 #include "Temp.h"
-<<<<<<< .merge_file_a04888
+
 #include "Os.h"
-=======
 #include "Dio.h"
 #include "Sci.h"
 
 #include "Led.h"
 #include "Gps.h"
->>>>>>> .merge_file_a05260
+
 
 #if ! SHELLCFG_USES_MFS
 #error "This application requires SHELLCFG_USES_MFS defined non-zero in user_config.h. Please recompile libraries with this option."
@@ -100,13 +99,18 @@ void init_task(uint32_t temp)
 {
 	_task_id init_taskId;
     (void)temp; /* suppress 'unused variable' warning */
+    uint32_t AdcValue;
     
     /* Place MCAL initialization here */
     Adc_Init();
     Dio_Init();
     Sci_Init();
-    
-    _time_delay(100);
+   
+    for(uint8_t i=0;i<10;i++){
+    	Adc_StartGroupConv();
+    	AdcValue=Adc_ReadGroup();
+    }
+    OS_Delay(100);
     
     /* Place SWC initializations here */
     Gps_vInit();
@@ -125,9 +129,9 @@ void init_task(uint32_t temp)
     /* Run the shell on the serial port */
     printf("Demo Initialized\n");
     
-    motorId =  OS_CreateTaskBlocked(0, 3, 0);
-    SdCardId = OS_CreateTaskBlocked(0, 1, 0);
-    readId  =  OS_CreateTask(0, 2, 0);
+    motorId =  OS_CreateTask(0, 3, 0, 1);
+    SdCardId = OS_CreateTask(0, 1, 0, 1);
+    readId  =  OS_CreateTask(0, 2, 0, 0);
     _task_destroy(init_taskId);
     
 }
@@ -171,7 +175,7 @@ void read_task(uint32_t temp)
 		_task_ready(motor_ptr);
 		_task_ready(sdcard_ptr);
     	    
-    	_time_delay (1000);
+    	OS_Delay (200);
     }
     
 }
@@ -190,7 +194,7 @@ void motor_task(uint32_t temp)
     /* Run the shell on the serial port */
     for(;;){
     printf("Motor Task\n");
-    _task_block();
+    OS_BlockTask();
     }
 }
 
@@ -221,7 +225,7 @@ void sdcard_task(uint32_t temp)
     if (NULL == com_handle)
     {
         printf("Error opening communication handle %s, check your user_config.h.\n", SDCARD_COM_CHANNEL);
-        _task_block();
+        OS_BlockTask();
     }
 
 #if defined BSP_SDCARD_GPIO_DETECT
@@ -230,7 +234,7 @@ void sdcard_task(uint32_t temp)
        if (!error_code)
        {
            printf("Initializing GPIO with sdcard detect pin failed.\n");
-           _task_block();
+           OS_BlockTask();
        }
        
        /*Set detect and protect pins as GPIO Function */
@@ -244,7 +248,7 @@ void sdcard_task(uint32_t temp)
     if ( error_code != MQX_OK )
     {
         printf("Error installing SD card device (0x%x)\n", error_code);
-        _task_block();
+        OS_BlockTask();
     }
 
     for (;;)
@@ -263,7 +267,7 @@ void sdcard_task(uint32_t temp)
         	        
             if (inserted)
             {
-                _time_delay (200);
+                OS_Delay (200);
                 /* Open the device which MFS will be installed on */
                 sdcard_handle = fopen("sdcard:", 0);
                 if (sdcard_handle == NULL)
@@ -387,7 +391,7 @@ void sdcard_task(uint32_t temp)
                 printf ("SD card uninstalled.\n");
             }
         }
-        _task_block();
+        OS_BlockTask();
     }
 }
 

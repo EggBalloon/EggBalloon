@@ -27,14 +27,16 @@ void Gpt_StartTimer(void)
 	
 }
 
-uint32_t OS_CreateTask(uint16_t processor, uint32_t index, uint32_t parameters)
+uint32_t OS_CreateTask(uint16_t processor, uint32_t index, uint32_t parameters, uint8_t blocked)
 {
-	return _task_create(processor, index, parameters);
-}
-
-uint32_t OS_CreateTaskBlocked(uint16_t processor, uint32_t index, uint32_t parameters)
-{
-	return _task_create_blocked(processor, index, parameters);
+	uint32_t result;
+	if(1==blocked)
+	{
+		result=_task_create_blocked(processor, index, parameters);
+	}else{
+		result=_task_create(processor, index, parameters);
+	}
+	return result;
 }
 
 void OS_BlockTask(void)
@@ -42,9 +44,9 @@ void OS_BlockTask(void)
 	_task_block();
 }
 
-uint32_t  OS_TaskDestroy(uint32_t TaskID)
+void OS_Delay(uint32_t delay)
 {
-	return _task_destroy(TaskID);
+	_time_delay(delay);
 }
 
 

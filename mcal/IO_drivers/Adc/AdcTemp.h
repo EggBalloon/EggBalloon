@@ -13,6 +13,6 @@
 void Adc_Init(void);
 void Adc_DeInit(void);
 void Adc_StartGroupConv(void);
-void Adc_ReadGroup(void);
+uint32_t Adc_ReadGroup(void);
 
 #endif /* ADC_H_ */

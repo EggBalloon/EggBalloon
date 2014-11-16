@@ -9,6 +9,8 @@
 
 void Adc_Init(void)
 {
+	/*Configure ADC module to read internal temp sensor*/
+	ADC0_SC1A=0;	
 	
 }
 
@@ -22,7 +24,11 @@ void Adc_StartGroupConv(void)
 	
 }
 
-void Adc_ReadGroup(void)
+uint32_t Adc_ReadGroup(void)
 {
+	uint32_t temp;
 	
+	temp++;
+	
+	return temp;
 }

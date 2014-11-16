@@ -7,8 +7,13 @@
 
 #include "IO_Interface.h"
 
-void Analog_Read(void)
+uint32_t Analog_Read(void)
 {
+	uint32_t temp;
+	
+	temp++;
+	
+	return temp;
 	
 }
 

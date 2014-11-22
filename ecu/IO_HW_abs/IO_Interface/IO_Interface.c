@@ -9,20 +9,113 @@
 
 uint32_t Analog_Read(void)
 {
-	uint32_t temp;
+	uint32_t u32AdcResult;
 	
-	temp++;
+	Adc_StartGroupConv();
 	
-	return temp;
+	u32AdcResult=Adc_ReadGroup();
+	
+	return u32AdcResult;	
+}
+
+void Digital_Write(uint16_t ChannelID, uint16_t value)
+{
+	uint16_t tempDIO;
+	
+	if(ChannelID&PWM_MASK)
+	{
+		/*Clear flags*/
+		ChannelID&=FLAGS_MASK;
+		/*Clear PWM mask*/
+		ChannelID&=~PWM_MASK;
+		switch(ChannelID)
+		{
+		case enPWM1:
+			
+			break;
+		case enPWM2:
+					
+			break;
+		case enPWM3:
+					
+			break;
+		case enPWM4:
+							
+			break;
+		default:
+			asm("nop");
+			break;
+		}
+	}else{
+	 tempDIO = (ChannelID>>8);
+	 ChannelID&=FLAGS_MASK;
+	 
+	 switch(ChannelID)
+	 		{
+	 		case enPORTA:
+	 			
+	 			break;
+	 		case enPORTB:
+	 			if (21==tempDIO){
+	 			    Dio_SetPin(enPORTB, PIN21, (uint8_t)value);	
+	 			}else if(22==tempDIO){
+	 				Dio_SetPin(enPORTB, PIN22, (uint8_t)value);
+	 			}else if(26==tempDIO){
+	 				Dio_SetPin(enPORTB, PIN26, (uint8_t)value);
+	 			}
+	 		    break;
+	 		case enPORTC:
+	 					
+	 			break;
+	 		case enPORTD:
+	 							
+	 			break;
+	 		case enPORTE:
+	 			 							
+	 			break;
+	 		default:
+	 			asm("nop");
+	 			break;
+	 		}
+	}
 	
 }
 
-void Digital_Write(void)
+uint8_t Digital_Read(uint16_t ChannelID, uint16_t value)
 {
+	uint8_t u8Result;
+	uint16_t u16Pin;
 	
-}
-
-void Digital_Read(void)
-{
-	
+    ChannelID&=FLAGS_MASK;
+    u16Pin=(value>>8);
+    
+    switch(ChannelID)
+   	 		{
+   	 		case enPORTA:
+   	 			
+   	 			break;
+   	 		case enPORTB:
+   	 			if (21==u16Pin){
+   	 				u8Result=Dio_ReadPin(enPORTB, PIN21);	
+   	 			}else if(22==u16Pin){
+   	 				u8Result=Dio_ReadPin(enPORTB, PIN22);
+   	 			}else if(26==u16Pin){
+   	 				u8Result=Dio_ReadPin(enPORTB, PIN26);
+   	 			}
+   	 		    break;
+   	 		case enPORTC:
+   	 					
+   	 			break;
+   	 		case enPORTD:
+   	 							
+   	 			break;
+   	 		case enPORTE:
+   	 			 							
+   	 			break;
+   	 		default:
+   	 			u8Result=0xFF;
+   	 			break;
+   	 		}
+    
+    return u8Result;
 }

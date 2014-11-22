@@ -26,7 +26,7 @@ static bool	boGreenInit = FALSE;
 static bool	boBlueInit = FALSE;
 
 static void DIO__vSetLwgpio(LWGPIO_STRUCT * pstPortReg,LWGPIO_VALUE Value);
-
+static LWGPIO_VALUE DIO__vGetLwgpio(LWGPIO_STRUCT * pstPortReg);
 
 void Dio_Init(void)
 {
@@ -112,10 +112,38 @@ uint8_t Dio_ReadPin(uint8_t Port, uint32_t Pin)
 {
 	uint8_t u8RetVal=0;
 	
+	if(enPORTB == Port)
+	{
+		switch(Pin)
+		{
+		case PIN21:
+			u8RetVal=DIO__vGetLwgpio(&stLedBlue);
+			break;
+		case PIN22:
+			u8RetVal=DIO__vGetLwgpio(&stLedRed);
+			break;
+		case PIN26:
+			u8RetVal=DIO__vGetLwgpio(&stLedGreen);
+			break;
+		default:
+			u8RetVal=0xFF;
+			break;
+		}
+	}
+	else
+	{
+		/* do nothing (just PORTB is needed) */
+		u8RetVal=0xFF;
+	}
 	return u8RetVal;	
 }
 
 static void DIO__vSetLwgpio(LWGPIO_STRUCT * pstPortReg,LWGPIO_VALUE Value)
 {
 	lwgpio_set_value(pstPortReg,Value);
+}
+
+static LWGPIO_VALUE DIO__vGetLwgpio(LWGPIO_STRUCT * pstPortReg)
+{
+	return lwgpio_get_value(pstPortReg);
 }

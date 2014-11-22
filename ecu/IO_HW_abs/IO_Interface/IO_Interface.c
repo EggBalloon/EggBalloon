@@ -21,64 +21,36 @@ uint32_t Analog_Read(void)
 void Digital_Write(uint16_t ChannelID, uint16_t value)
 {
 	uint16_t tempDIO;
-	
+
 	if(ChannelID&PWM_MASK)
 	{
 		/*Clear flags*/
 		ChannelID&=FLAGS_MASK;
 		/*Clear PWM mask*/
 		ChannelID&=~PWM_MASK;
-		switch(ChannelID)
-		{
-		case enPWM1:
-			
-			break;
-		case enPWM2:
-					
-			break;
-		case enPWM3:
-					
-			break;
-		case enPWM4:
-							
-			break;
-		default:
-			asm("nop");
-			break;
-		}
+		/*Set duty cycle for the specified PWM channel*/
+		Pwm_SetDutyCycle(ChannelID, value);
 	}else{
-	 tempDIO = (ChannelID>>8);
-	 ChannelID&=FLAGS_MASK;
-	 
-	 switch(ChannelID)
-	 		{
-	 		case enPORTA:
-	 			
-	 			break;
-	 		case enPORTB:
-	 			if (21==tempDIO){
-	 			    Dio_SetPin(enPORTB, PIN21, (uint8_t)value);	
-	 			}else if(22==tempDIO){
-	 				Dio_SetPin(enPORTB, PIN22, (uint8_t)value);
-	 			}else if(26==tempDIO){
-	 				Dio_SetPin(enPORTB, PIN26, (uint8_t)value);
-	 			}
-	 		    break;
-	 		case enPORTC:
-	 					
-	 			break;
-	 		case enPORTD:
-	 							
-	 			break;
-	 		case enPORTE:
-	 			 							
-	 			break;
-	 		default:
-	 			asm("nop");
-	 			break;
-	 		}
+		tempDIO = (ChannelID>>8);
+		ChannelID&=FLAGS_MASK;
+
+		if(enPORTB ==ChannelID){
+			switch(tempDIO){
+			case 21:
+				Dio_SetPin(enPORTB, PIN21, (uint8_t)value);
+				break;
+			case 22:
+				Dio_SetPin(enPORTB, PIN22, (uint8_t)value);
+				break;
+			case 26:
+				Dio_SetPin(enPORTB, PIN26, (uint8_t)value);
+				break;
+			default:
+				asm("nop");
+				break;
+			}
+		}
 	}
-	
 }
 
 uint8_t Digital_Read(uint16_t ChannelID, uint16_t value)

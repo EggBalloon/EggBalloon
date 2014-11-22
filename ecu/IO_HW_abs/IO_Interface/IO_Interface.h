@@ -15,15 +15,6 @@
 #define PWM_MASK 		0x10
 #define FLAGS_MASK 		0x00FF
 
-typedef enum
-{
-	enPWM1=0,
-	enPWM2,
-	enPWM3,
-	enPWM4,
-	enPWM5,
-}Pwm_tenPwm;
-
 #define DIO21	(0x1500)
 #define DIO22	(0x1600)
 #define DIO26 	(0x1A00)

@@ -37,7 +37,7 @@ Provide MFS file system on external SD card.
 #include "Os.h"
 #include "Dio.h"
 #include "Led.h"
-
+#include "Gps.h"
 
 #if ! SHELLCFG_USES_MFS
 #error "This application requires SHELLCFG_USES_MFS defined non-zero in user_config.h. Please recompile libraries with this option."
@@ -179,7 +179,7 @@ void read_task(uint32_t temp)
     	Gps_vProcessPosition(&stCurrentPosition);   
     	ioctl(stdout,IO_IOCTL_SERIAL_TRANSMIT_DONE,&u32Void);
     	 /* Run the shell on the serial port */
-<<<<<<< .merge_file_a09812
+
     	     	
     	 u8Counter++;
     	 if(u8Counter>19)
@@ -193,16 +193,8 @@ void read_task(uint32_t temp)
     	 else
     	 {
     		 /* do nothing */
-    	 }
-    	_time_delay (50);
-=======
-    	 printf("Read Task\n");
-    	
-		_task_ready(motor_ptr);
-		_task_ready(sdcard_ptr);
-    	    
+    	 }   	    
     	OS_Delay (200);
->>>>>>> .merge_file_a09928
     }
     
 }
@@ -419,7 +411,7 @@ void sdcard_task(uint32_t temp)
                 printf ("SD card uninstalled.\n");
             }
         }
-<<<<<<< .merge_file_a09812
+
         /* MaLo Test routine */
         if(0 == u32Counter)
         {
@@ -522,10 +514,9 @@ void sdcard_task(uint32_t temp)
         	}
         	
         }
-        _task_block();
-=======
+
         OS_BlockTask();
->>>>>>> .merge_file_a09928
+
     }
 }
 

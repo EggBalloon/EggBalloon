@@ -36,11 +36,8 @@ Provide MFS file system on external SD card.
 
 #include "Os.h"
 #include "Dio.h"
-#include "Sci.h"
-
 #include "Led.h"
 #include "Gps.h"
-
 
 #if ! SHELLCFG_USES_MFS
 #error "This application requires SHELLCFG_USES_MFS defined non-zero in user_config.h. Please recompile libraries with this option."
@@ -70,6 +67,7 @@ Provide MFS file system on external SD card.
 _task_id motorId, readId, SdCardId;
 
 bool boBlueInit;
+static uint8_t u8Counter;
 static Gps_tstPosition stCurrentPosition;
 
 void init_task(uint32_t);
@@ -77,6 +75,15 @@ void motor_task(uint32_t);
 void read_task(uint32_t);
 void sdcard_task(uint32_t);
 
+_mqx_uint		u32Counter;
+_mqx_uint		u32Counter2;
+_mqx_uint		u32ColorCounter;
+_mqx_uint		u32ToggleVal;
+_mqx_int		u32StrLen;
+bool			boFileClosed;
+bool			boFileExists;
+static MQX_FILE_PTR      fd = NULL;
+const char ksFilePath[]="a:\\Test_File.csv";
 const TASK_TEMPLATE_STRUCT  MQX_template_list[] =
 {
    /* Task Index,   Function,     Stack,  Priority, Name,     Attributes,          Param, Time Slice */
@@ -133,7 +140,7 @@ void init_task(uint32_t temp)
     SdCardId = OS_CreateTask(0, 1, 0, 1);
     readId  =  OS_CreateTask(0, 2, 0, 0);
     _task_destroy(init_taskId);
-    
+    u8Counter = 0;
 }
 
 /*TASK*-----------------------------------------------------------------
@@ -146,6 +153,7 @@ void init_task(uint32_t temp)
 void read_task(uint32_t temp)
 {
 	bool boTemp=FALSE;
+	uint32_t u32Void;
     (void)temp; /* suppress 'unused variable' warning */
     _task_id motor_Id, sdcard_Id;
     TD_STRUCT_PTR motor_ptr;
@@ -168,13 +176,24 @@ void read_task(uint32_t temp)
     	{
     		Led_vToggle();
     	}
-    	 Gps_vProcessPosition(&stCurrentPosition);   
+    	Gps_vProcessPosition(&stCurrentPosition);   
+    	ioctl(stdout,IO_IOCTL_SERIAL_TRANSMIT_DONE,&u32Void);
     	 /* Run the shell on the serial port */
-    	 printf("Read Task\n");
-    	
-		_task_ready(motor_ptr);
-		_task_ready(sdcard_ptr);
-    	    
+
+    	     	
+    	 u8Counter++;
+    	 if(u8Counter>19)
+    	 {
+    		 printf("Read Task\n");
+    		 u8Counter = 0;
+    		 
+			_task_ready(motor_ptr);
+			_task_ready(sdcard_ptr);
+    	 }
+    	 else
+    	 {
+    		 /* do nothing */
+    	 }   	    
     	OS_Delay (200);
     }
     
@@ -215,6 +234,7 @@ void sdcard_task(uint32_t temp)
     char            filesystem_name[] = "a:";
     char            partman_name[] = "pm:";
     char            partition_name[] = "pm:1";
+    char			sDataToWrite[128];
 #if defined BSP_SDCARD_GPIO_DETECT
     LWGPIO_STRUCT   sd_detect;
 #endif
@@ -391,7 +411,112 @@ void sdcard_task(uint32_t temp)
                 printf ("SD card uninstalled.\n");
             }
         }
+
+        /* MaLo Test routine */
+        if(0 == u32Counter)
+        {
+        	u32StrLen=sprintf(sDataToWrite,"%s",ksFilePath);
+        	fd=fopen(sDataToWrite, "a");
+        	if(fd!=NULL)
+        	{
+        		if(ftell(fd)>0)
+				{
+					boFileExists = TRUE;
+				}
+				else
+				{
+					/* do nothing */
+				}
+        		
+        		if(FALSE == boFileExists)
+        		{
+        			printf ("File created\n");
+            		/*u32StrLen=sprintf(sDataToWrite,"==Software Engineering in Embedded Systems==\r\n");
+            		write(fd,sDataToWrite,u32StrLen);*/        		
+            		
+            		u32StrLen=sprintf(sDataToWrite,"Time(sec),TEMP(°C),LAT,LON,DIST\r\n");
+            		write(fd,sDataToWrite,u32StrLen);
+        		}
+        		else
+        		{
+        			printf ("File opened\n");
+        		}
+        	}
+        	else
+        	{
+        		printf ("ERROR opening file \n");
+        	}
+        }
+        else
+        {
+        	if( (fd!=NULL) && ((u32Counter>=5) && (u32Counter2 < 10)) )
+        	{
+        		u32Counter=0;
+        		u32StrLen=sprintf(sDataToWrite,"%5.5d, %3.3d, %2.2d.%4.4d, %2.2d.%4.4d, %d\r\n",u32Counter2,25,24,98,103,96,(u32Counter2*2));
+        		write(fd,sDataToWrite,u32StrLen);
+        		printf ("%s",sDataToWrite);
+        		if(u32ToggleVal&0x01)
+        		{
+        			Led_vSetColor(enLedColorMagenta);
+        		}
+        		else
+        		{
+        			Led_vSetColor(enLedColorOff);
+        		}
+        		//lwgpio_set_value(&stLedBlue, u32ToggleVal);/* MaLo */
+        		u32Counter2++;
+        		u32ToggleVal^=1;/* MaLo: Toggle */
+        	}
+        	else
+        	{
+        		if(u32Counter2 >= 10)
+        		{
+        			if( FALSE ==boFileClosed  )
+        			{
+        				boFileClosed = TRUE;
+        				if( !fclose(fd) )
+						{
+							printf ("File CLOSED\n");
+							Led_vSetColor(enLedColorGreen);
+						}
+						else
+						{
+							printf ("ERROR closing file \n");
+							Led_vSetColor(enLedColorRed);
+						}
+        				fd=NULL;
+        			}
+        			else
+        			{
+        				/* do nothing */
+        			}
+        		}
+        		else
+        		{/* do nothing */}
+        	}
+        }
+        
+        if( fd!=NULL )
+		{
+        	u32Counter++;
+		}
+        else
+        {
+        	if(u32Counter2>=2)
+        	{
+        		u32Counter2=0;
+        		Led_vSetColor(u32ColorCounter++);
+        		u32ColorCounter&=0x07;
+        	}
+        	else
+        	{
+        		u32Counter2++;
+        	}
+        	
+        }
+
         OS_BlockTask();
+
     }
 }
 

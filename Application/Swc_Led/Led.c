@@ -6,7 +6,7 @@
  */
 
 #include "Led.h"
-#include "Dio.h"
+#include "IO_Interface.h"
 
 #define	LEDS_RED_MSK	(0x01)
 #define	LEDS_GREEN_MSK	(0x02)
@@ -49,9 +49,9 @@ void Led_vSetColor(LED_tenLedColors enColor)
 		LED__boToggle = FALSE;/*All colors OFF*/
 	}
 
-	Dio_SetPin(enPORTB,PIN21,(uint8_t)enBlue);
-	Dio_SetPin(enPORTB,PIN22,(uint8_t)enRed);
-	Dio_SetPin(enPORTB,PIN26,(uint8_t)enGreen);	
+	Digital_Write(enPORTB | DIO21,enBlue);
+	Digital_Write(enPORTB | DIO22,enRed);
+	Digital_Write(enPORTB | DIO26,enGreen);	
 }
 
 void Led_vToggle(void)
@@ -59,15 +59,15 @@ void Led_vToggle(void)
 	if(FALSE == LED__boToggle)
 	{
 		LED__boToggle = TRUE;
-		Dio_SetPin(enPORTB,PIN21,(uint8_t)enBlue);
-		Dio_SetPin(enPORTB,PIN22,(uint8_t)enRed);
-		Dio_SetPin(enPORTB,PIN26,(uint8_t)enGreen);
+		Digital_Write(enPORTB | DIO21,enBlue);
+		Digital_Write(enPORTB | DIO22,enRed);
+		Digital_Write(enPORTB | DIO26,enGreen);
 	}
 	else
 	{
 		LED__boToggle = FALSE;
-		Dio_SetPin(enPORTB,PIN21,(uint8_t)PORT_OFF);
-		Dio_SetPin(enPORTB,PIN22,(uint8_t)PORT_OFF);
-		Dio_SetPin(enPORTB,PIN26,(uint8_t)PORT_OFF);
+		Digital_Write(enPORTB | DIO21,PORT_OFF);
+		Digital_Write(enPORTB | DIO22,PORT_OFF);
+		Digital_Write(enPORTB | DIO26,PORT_OFF);
 	}
 }

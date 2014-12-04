@@ -9,11 +9,12 @@
 #define PWM_H_
 
 #include "MK64F12.h"
+#include "Pwm_Cfg.c"
 
-void vfnFTMEdgeAligned (uint32_t u32Period, uint32_t u32Duty);
-void Pwm_Init(void);
+
+void Pwm_Init(const Pwm_ConfigType* FtmConfig);
 void Pwm_DeInit(void);
-void Pwm_SetDutyCycle(void);
+void Pwm_SetDutyCycle(Pwm_ChannelType enChannelNumber, uint16_t DutyCycle);
 
 
 #endif /* PWM_H_ */

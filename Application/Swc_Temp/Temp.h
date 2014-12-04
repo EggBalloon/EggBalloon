@@ -10,6 +10,13 @@
 
 #include "IO_Interface.h"
 
-void Temp_Read(void);
+/*!
+* @brief These values are used to get the temperature. DO NOT MODIFY
+*/
+#define VTEMP25_ADC             (14279U)
+#define VREF                    (3300000U)
+#define M1                      (1715)
+
+int32_t Temp_Read(void);
 
 #endif /* TEMP_H_ */

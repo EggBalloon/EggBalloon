@@ -63,12 +63,15 @@ Provide MFS file system on external SD card.
 #error "SDCARD low level communication device not defined!"
 #endif
 
+#define APP_PERIOD_SECONDS     60
 
 _task_id motorId, readId, SdCardId;
 
 bool boBlueInit;
 static uint8_t u8Counter;
 static Gps_tstPosition stCurrentPosition;
+static int32_t gTemperatureValueinC;
+static uint32_t gSecondsCounter;
 
 void init_task(uint32_t);
 void motor_task(uint32_t);
@@ -106,21 +109,16 @@ void init_task(uint32_t temp)
 {
 	_task_id init_taskId;
     (void)temp; /* suppress 'unused variable' warning */
-    uint32_t AdcValue;
     
     /* Place MCAL initialization here */
     Adc_Init();
     Dio_Init();
     Sci_Init();
-   
-    for(uint8_t i=0;i<10;i++){
-    	Adc_StartGroupConv();
-    	AdcValue=Adc_ReadGroup();
-    }
+  
     OS_Delay(100);
     
     /* Place SWC initializations here */
-    Gps_vInit();
+   // Gps_vInit();
 #if 0
 	if (!lwgpio_init(&stLedBlue, BSP_RGBBLUE, LWGPIO_DIR_OUTPUT, LED_OFF))
 	{
@@ -168,18 +166,10 @@ void read_task(uint32_t temp)
         
     for(;;)
     {
-    	if(FALSE == boTemp)
-    	{
-    		boTemp = TRUE;
-    		/*Led_vSetColor(enLedColorBlue);*/
-    	}else
-    	{
-    		Led_vToggle();
-    	}
+    	gTemperatureValueinC = Temp_Read();
     	Gps_vProcessPosition(&stCurrentPosition);   
     	ioctl(stdout,IO_IOCTL_SERIAL_TRANSMIT_DONE,&u32Void);
     	 /* Run the shell on the serial port */
-
     	     	
     	 u8Counter++;
     	 if(u8Counter>19)
@@ -194,7 +184,7 @@ void read_task(uint32_t temp)
     	 {
     		 /* do nothing */
     	 }   	    
-    	OS_Delay (200);
+    	OS_Delay (50);
     }
     
 }
@@ -416,31 +406,11 @@ void sdcard_task(uint32_t temp)
         if(0 == u32Counter)
         {
         	u32StrLen=sprintf(sDataToWrite,"%s",ksFilePath);
-        	fd=fopen(sDataToWrite, "a");
+        	fd=fopen(sDataToWrite, "a+");
+        	u32Counter++;
         	if(fd!=NULL)
         	{
-        		if(ftell(fd)>0)
-				{
-					boFileExists = TRUE;
-				}
-				else
-				{
-					/* do nothing */
-				}
-        		
-        		if(FALSE == boFileExists)
-        		{
-        			printf ("File created\n");
-            		/*u32StrLen=sprintf(sDataToWrite,"==Software Engineering in Embedded Systems==\r\n");
-            		write(fd,sDataToWrite,u32StrLen);*/        		
-            		
-            		u32StrLen=sprintf(sDataToWrite,"Time(sec),TEMP(°C),LAT,LON,DIST\r\n");
-            		write(fd,sDataToWrite,u32StrLen);
-        		}
-        		else
-        		{
-        			printf ("File opened\n");
-        		}
+        		printf ("File opened\n");	
         	}
         	else
         	{
@@ -449,10 +419,11 @@ void sdcard_task(uint32_t temp)
         }
         else
         {
-        	if( (fd!=NULL) && ((u32Counter>=5) && (u32Counter2 < 10)) )
+        	if( (fd!=NULL)&&(u32Counter2<APP_PERIOD_SECONDS))
         	{
         		u32Counter=0;
-        		u32StrLen=sprintf(sDataToWrite,"%5.5d, %3.3d, %2.2d.%4.4d, %2.2d.%4.4d, %d\r\n",u32Counter2,25,24,98,103,96,(u32Counter2*2));
+        		gSecondsCounter++;
+        		u32StrLen=sprintf(sDataToWrite,"Temperature, %.2d, Distance, %6.6d, Time, %d\r\n",gTemperatureValueinC,25,gSecondsCounter);
         		write(fd,sDataToWrite,u32StrLen);
         		printf ("%s",sDataToWrite);
         		if(u32ToggleVal&0x01)
@@ -465,11 +436,13 @@ void sdcard_task(uint32_t temp)
         		}
         		//lwgpio_set_value(&stLedBlue, u32ToggleVal);/* MaLo */
         		u32Counter2++;
+        		u32Counter++;
         		u32ToggleVal^=1;/* MaLo: Toggle */
+
         	}
         	else
         	{
-        		if(u32Counter2 >= 10)
+        		if(u32Counter2 >= APP_PERIOD_SECONDS)
         		{
         			if( FALSE ==boFileClosed  )
         			{
@@ -495,28 +468,7 @@ void sdcard_task(uint32_t temp)
         		{/* do nothing */}
         	}
         }
-        
-        if( fd!=NULL )
-		{
-        	u32Counter++;
-		}
-        else
-        {
-        	if(u32Counter2>=2)
-        	{
-        		u32Counter2=0;
-        		Led_vSetColor(u32ColorCounter++);
-        		u32ColorCounter&=0x07;
-        	}
-        	else
-        	{
-        		u32Counter2++;
-        	}
-        	
-        }
-
         OS_BlockTask();
-
     }
 }
 

@@ -64,6 +64,7 @@ Provide MFS file system on external SD card.
 #endif
 
 #define APP_PERIOD_SECONDS     60
+#define LOW_BATTERY_LEVEL      56000
 
 _task_id motorId, readId, SdCardId;
 
@@ -113,6 +114,7 @@ void init_task(uint32_t temp)
     /* Place MCAL initialization here */
     Adc_Init();
     Dio_Init();
+    Led_vSetColor(enLedColorBlue);/* Set BLUE LED during the initialization */
     Sci_Init();
   
     OS_Delay(100);
@@ -163,6 +165,8 @@ void read_task(uint32_t temp)
     
     motor_ptr = _task_get_td(motor_Id);
     sdcard_ptr = _task_get_td(sdcard_Id);
+    
+    Led_vSetColor(enLedColorGreen);/* Set BLUE GREEN: System is ready and running*/
         
     for(;;)
     {
@@ -179,6 +183,12 @@ void read_task(uint32_t temp)
     		 
 			_task_ready(motor_ptr);
 			_task_ready(sdcard_ptr);
+			
+			if(LOW_BATTERY_LEVEL>gBatteryLevel){
+				Led_vSetColor(enLedColorRed);
+			}else{
+				/*Do nothing*/
+			}
     	 }
     	 else
     	 {
@@ -428,7 +438,7 @@ void sdcard_task(uint32_t temp)
         		printf ("%s",sDataToWrite);
         		if(u32ToggleVal&0x01)
         		{
-        			Led_vSetColor(enLedColorMagenta);
+        			Led_vSetColor(enLedColorWhite);
         		}
         		else
         		{
@@ -450,12 +460,12 @@ void sdcard_task(uint32_t temp)
         				if( !fclose(fd) )
 						{
 							printf ("File CLOSED\n");
-							Led_vSetColor(enLedColorGreen);
+							Led_vSetColor(enLedColorMagenta);
 						}
 						else
 						{
 							printf ("ERROR closing file \n");
-							Led_vSetColor(enLedColorRed);
+							Led_vSetColor(enLedColorCyan);
 						}
         				fd=NULL;
         			}

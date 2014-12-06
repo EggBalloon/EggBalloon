@@ -66,7 +66,7 @@ Provide MFS file system on external SD card.
 #else
 #error "SDCARD low level communication device not defined!"
 #endif
-<<<<<<< HEAD
+
 #define MAXINVALIDTRIES 5
 #define MINDWNSPEED 10
 #define QUADRANT0 0
@@ -94,28 +94,28 @@ typedef enum{
 
 #define SEEKPOSVAL 0xFFFF
 #define VALID_POSMASK	0x8000
-=======
+
 
 #define APP_PERIOD_SECONDS     60
 #define LOW_BATTERY_LEVEL      56000
->>>>>>> b40b42972a668124e7bd886cfaae829301d9c277
+
 
 _task_id motorId, readId, SdCardId;
 
 bool boBlueInit;
 static uint8_t u8Counter;
 static Gps_tstPosition stCurrentPosition;
-<<<<<<< HEAD
+
 static uint16_t u16DestPosition;
 static uint8_t u8MtrCurrentState=0;
 static uint8_t u8DistanceLeft=0;
 static uint8_t u8DestDirection;
 static uint8_t u8CurrPosition;
 static uint8_t u8SystDirection;
-=======
+
 static int32_t gTemperatureValueinC;
 static uint32_t gSecondsCounter;
->>>>>>> b40b42972a668124e7bd886cfaae829301d9c277
+
 
 void init_task(uint32_t);
 void motor_task(uint32_t);
@@ -160,16 +160,14 @@ void init_task(uint32_t temp)
     Dio_Init();
     Led_vSetColor(enLedColorBlue);/* Set BLUE LED during the initialization */
     Sci_Init();
-<<<<<<< HEAD
+
     FAN_InitMotorCntrl();
    
     for(uint8_t i=0;i<10;i++){
     	Adc_StartGroupConv();
     	AdcValue=Adc_ReadGroup();
     }
-=======
-  
->>>>>>> b40b42972a668124e7bd886cfaae829301d9c277
+
     OS_Delay(100);
     
     /* Place SWC initializations here */

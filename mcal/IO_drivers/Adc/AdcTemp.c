@@ -9,8 +9,10 @@
 
 
 uint32_t gAdcValue=0;
+uint32_t gBatteryLevel=0;
 
 static uint8_t ADC0_Cal(void);
+static void Adc_StartBatteryConv(void);
 
 void Adc_Init(void)
 {
@@ -46,6 +48,18 @@ void Adc_StartGroupConv(void)
 	while (!(ADC0_SC1A & ADC_SC1_COCO_MASK));
 	/*Store conversion in global variable to be reported by Adc_ReadGroup()*/
 	gAdcValue=ADC0_RA;
+	Adc_StartBatteryConv();
+}
+
+void Adc_StartBatteryConv(void)
+{
+	/*Start Conversion*/
+	ADC0_SC1A=ADC_SC1_ADCH(VREFH_CHANNEL);
+	/*Wait for the conversion*/
+	while ((ADC0_SC2 & ADC_SC2_ADACT_MASK));
+	while (!(ADC0_SC1A & ADC_SC1_COCO_MASK));
+	/*Store conversion in global variable to be reported by Adc_ReadGroup()*/
+	gBatteryLevel=ADC0_RA;
 }
 
 uint32_t Adc_ReadGroup(void)

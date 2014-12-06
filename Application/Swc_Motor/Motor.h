@@ -14,6 +14,9 @@
 #include "Motor_Cfg.h"
 #include "mqx.h"
 
+#define BASESPEED (FTM_Period*0.80)
+#define SYSBASESPEED	(FTM_Period*0.60)
+#define SYSMAXSPEED	(FTM_Period*0.95)
 void FAN_InitMotorCntrl(void);
 
 void FAN_DeInitMotorCntrl(void);

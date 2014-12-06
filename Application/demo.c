@@ -433,7 +433,7 @@ void sdcard_task(uint32_t temp)
         	{
         		u32Counter=0;
         		gSecondsCounter++;
-        		u32StrLen=sprintf(sDataToWrite,"Temperature, %.2d, Distance, %6.6d, Time, %d\r\n",gTemperatureValueinC,25,gSecondsCounter);
+        		u32StrLen=sprintf(sDataToWrite,"Temperature, %.2d, Distance, %6.6d, Time, %d\r\n",gTemperatureValueinC,stCurrentPosition.u32CurrDist,gSecondsCounter);
         		write(fd,sDataToWrite,u32StrLen);
         		printf ("%s",sDataToWrite);
         		if(u32ToggleVal&0x01)

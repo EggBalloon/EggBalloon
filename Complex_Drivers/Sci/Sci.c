@@ -27,12 +27,12 @@ void Sci_Init(void)
 		printf("ERR\n");
 	}
 	/* Flush Tx/Rx buffers */
-	fflush(pGpsDev);
+	Sci_flush();
 }
 
 void Sci_DeInit(void)
 {
-	
+	Sci_flush();	
 }
 
 uint16_t Sci_Read(uint8_t *pu8Buffer,uint16_t u16DataLen)
@@ -44,28 +44,35 @@ uint16_t Sci_Read(uint8_t *pu8Buffer,uint16_t u16DataLen)
 	
 	if(pGpsDev!=NULL)
 	{
-		u16Temp = 0;
-		u8ReadByte = 0;
-		while(u16Temp<u16DataLen)
+		if(u16DataLen<enSciStatus)
 		{
-			u8Temp=read(pGpsDev,&u8ReadByte,1);
-			if(1 == u8Temp)
+			u16Temp = 0;
+			u8ReadByte = 0;
+			while(u16Temp<u16DataLen)
 			{
-				pu8Buffer[u16Temp]=u8ReadByte;
-				u16Temp++;
+				u8Temp=read(pGpsDev,&u8ReadByte,1);
+				if(1 == u8Temp)
+				{
+					pu8Buffer[u16Temp]=u8ReadByte;
+					u16Temp++;
+				}
+				else
+				{
+					u16Temp=0xFFFF;/*ERROR*/
+				}
+			}
+			if(u16Temp!=0xFFFF)
+			{
+				u16RetVal=u16Temp;
 			}
 			else
 			{
-				u16Temp=0xFFFF;/*ERROR*/
+				u16RetVal=(uint16_t)enSciErrNoData;
 			}
-		}
-		if(u16Temp!=0xFFFF)
-		{
-			u16RetVal=u16Temp;
 		}
 		else
 		{
-			u16RetVal=(uint16_t)enSciErrNoData;
+			ioctl(pGpsDev,IO_IOCTL_CHAR_AVAIL,&u16RetVal);
 		}
 	}
 	else
@@ -88,4 +95,10 @@ uint16_t Sci_Write(uint8_t *pu8Buffer,uint16_t u16DataLen)
 		u16RetVal=(uint16_t)enSciErrNoInit;
 	}
 	return u16RetVal;
+}
+
+void Sci_flush(void)
+{
+	/* Flush Tx/Rx buffers */
+	fflush(pGpsDev);
 }

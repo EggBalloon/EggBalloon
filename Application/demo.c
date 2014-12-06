@@ -42,6 +42,7 @@ Provide MFS file system on external SD card.
 #include "Led.h"
 #include "Gps.h"
 #include "Motor.h"
+#include "Gps.c"
 
 #if ! SHELLCFG_USES_MFS
 #error "This application requires SHELLCFG_USES_MFS defined non-zero in user_config.h. Please recompile libraries with this option."
@@ -66,7 +67,6 @@ Provide MFS file system on external SD card.
 #else
 #error "SDCARD low level communication device not defined!"
 #endif
-<<<<<<< HEAD
 #define MAXINVALIDTRIES 5
 #define MINDWNSPEED 10
 #define QUADRANT0 0
@@ -77,8 +77,7 @@ Provide MFS file system on external SD card.
 #define	CLCKWISE	0
 #define CCLCKWISE	1
 #define SYSDIRECTION	CLCKWISE
-#define CURRDISTLEFT	255	 /* Replace 255 for a structure defined for distance left. To be provided by Marco */
-#define MINDISTANCELEFT	50   /*Distance left units T.B.D. */
+#define MINDISTANCELEFT	50   /* Distance left units cm */
 static uint8_t TriesCount=0;
 typedef enum{
 	FINDPOSITION,
@@ -94,28 +93,25 @@ typedef enum{
 
 #define SEEKPOSVAL 0xFFFF
 #define VALID_POSMASK	0x8000
-=======
 
 #define APP_PERIOD_SECONDS     60
 #define LOW_BATTERY_LEVEL      56000
->>>>>>> b40b42972a668124e7bd886cfaae829301d9c277
+
 
 _task_id motorId, readId, SdCardId;
 
 bool boBlueInit;
 static uint8_t u8Counter;
 static Gps_tstPosition stCurrentPosition;
-<<<<<<< HEAD
 static uint16_t u16DestPosition;
 static uint8_t u8MtrCurrentState=0;
 static uint8_t u8DistanceLeft=0;
 static uint8_t u8DestDirection;
 static uint8_t u8CurrPosition;
 static uint8_t u8SystDirection;
-=======
 static int32_t gTemperatureValueinC;
 static uint32_t gSecondsCounter;
->>>>>>> b40b42972a668124e7bd886cfaae829301d9c277
+
 
 void init_task(uint32_t);
 void motor_task(uint32_t);
@@ -152,6 +148,7 @@ const TASK_TEMPLATE_STRUCT  MQX_template_list[] =
 void init_task(uint32_t temp)
 {
 	_task_id init_taskId;
+	uint32_t AdcValue;
     (void)temp; /* suppress 'unused variable' warning */
     
     /* Place MCAL initialization here */
@@ -160,20 +157,16 @@ void init_task(uint32_t temp)
     Dio_Init();
     Led_vSetColor(enLedColorBlue);/* Set BLUE LED during the initialization */
     Sci_Init();
-<<<<<<< HEAD
     FAN_InitMotorCntrl();
    
     for(uint8_t i=0;i<10;i++){
     	Adc_StartGroupConv();
     	AdcValue=Adc_ReadGroup();
     }
-=======
-  
->>>>>>> b40b42972a668124e7bd886cfaae829301d9c277
     OS_Delay(100);
     
     /* Place SWC initializations here */
-   // Gps_vInit();
+    //Gps_vInit();
 #if 0
 	if (!lwgpio_init(&stLedBlue, BSP_RGBBLUE, LWGPIO_DIR_OUTPUT, LED_OFF))
 	{
@@ -227,6 +220,7 @@ void read_task(uint32_t temp)
     	Gps_vProcessPosition(&stCurrentPosition);   
     	ioctl(stdout,IO_IOCTL_SERIAL_TRANSMIT_DONE,&u32Void);
     	 /* Run the shell on the serial port */
+
     	     	
     	 u8Counter++;
     	 if(u8Counter>19)
@@ -268,8 +262,7 @@ void motor_task(uint32_t temp)
     
     /* Starts Motor control Task*/
    	uint16_t TmpPosition; /* Local variable to store current position value invalid or valid */
-   // TmpPosition = Gps_u16GetDirection(); /* Get current GPS position */
-    	        
+       	        
     switch(u8MtrCurrentState){
     	case FINDPOSITION:{
     		TmpPosition = Gps_u16GetDirection(); /* Get current GPS position */
@@ -318,7 +311,7 @@ void motor_task(uint32_t temp)
     	   		FAN_SetMotorSpeed(MOTORB, 0);
     	   		FAN_SetMotorSpeed(MOTOREL,0);
     	   	}
-    	   	if(CURRDISTLEFT<(MINDISTANCELEFT/10))
+    	   	if(GPS__stLastPosition.u32DistToDest<(MINDISTANCELEFT/10))
     	   	{
     	   		u8MtrCurrentState=DOWNSOFT;
     	   	}else
@@ -400,7 +393,7 @@ void motor_task(uint32_t temp)
     		u8MtrCurrentState=DISTLEFT;
     	}break;
     	case DISTLEFT:{
-    		if(CURRDISTLEFT<MINDISTANCELEFT)
+    		if(GPS__stLastPosition.u32DistToDest<MINDISTANCELEFT)
     		{
     			u8MtrCurrentState=DOWNSOFT;
     		}else
@@ -414,8 +407,8 @@ void motor_task(uint32_t temp)
     /* Ends Motor control Task */
     printf("Motor Task\n");
     OS_BlockTask();
-    }
-}
+    }/* End For */
+} /* End Task */
 
 /*TASK*-----------------------------------------------------------------
 *

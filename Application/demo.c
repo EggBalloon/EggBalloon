@@ -34,10 +34,14 @@ Provide MFS file system on external SD card.
 #include <part_mgr.h>
 #include "Temp.h"
 
+#include "Pwm.h"
 #include "Os.h"
 #include "Dio.h"
+#include "Sci.h"
+
 #include "Led.h"
 #include "Gps.h"
+#include "Motor.h"
 
 #if ! SHELLCFG_USES_MFS
 #error "This application requires SHELLCFG_USES_MFS defined non-zero in user_config.h. Please recompile libraries with this option."
@@ -62,13 +66,45 @@ Provide MFS file system on external SD card.
 #else
 #error "SDCARD low level communication device not defined!"
 #endif
+#define MAXINVALIDTRIES 5
+#define MINDWNSPEED 10
+#define QUADRANT0 0
+#define QUADRANT1 1
+#define EAST	0
+#define WEST	1
+#define STRAIGHT 2
+#define	CLCKWISE	0
+#define CCLCKWISE	1
+#define SYSDIRECTION	CLCKWISE
+#define CURRDISTLEFT	255	 /* Replace 255 for a structure defined for distance left. To be provided by Marco */
+#define MINDISTANCELEFT	50   /*Distance left units T.B.D. */
+static uint8_t TriesCount=0;
+typedef enum{
+	FINDPOSITION,
+	CHECKIFVALID,
+	DOWNSOFT,
+	UPSOFT,
+	INITIAL,
+	SYSDIR,
+	MOVEON,
+	DISTLEFT,
+	MaxStates
+}enStateMachine;
 
+#define SEEKPOSVAL 0xFFFF
+#define VALID_POSMASK	0x8000
 
 _task_id motorId, readId, SdCardId;
 
 bool boBlueInit;
 static uint8_t u8Counter;
 static Gps_tstPosition stCurrentPosition;
+static uint16_t u16DestPosition;
+static uint8_t u8MtrCurrentState=0;
+static uint8_t u8DistanceLeft=0;
+static uint8_t u8DestDirection;
+static uint8_t u8CurrPosition;
+static uint8_t u8SystDirection;
 
 void init_task(uint32_t);
 void motor_task(uint32_t);
@@ -109,9 +145,11 @@ void init_task(uint32_t temp)
     uint32_t AdcValue;
     
     /* Place MCAL initialization here */
+    Pwm_Init(&pwmConfig);
     Adc_Init();
     Dio_Init();
     Sci_Init();
+    FAN_InitMotorCntrl();
    
     for(uint8_t i=0;i<10;i++){
     	Adc_StartGroupConv();
@@ -212,6 +250,153 @@ void motor_task(uint32_t temp)
     
     /* Run the shell on the serial port */
     for(;;){
+    
+    /* Starts Motor control Task*/
+   	uint16_t TmpPosition; /* Local variable to store current position value invalid or valid */
+   // TmpPosition = Gps_u16GetDirection(); /* Get current GPS position */
+    	        
+    switch(u8MtrCurrentState){
+    	case FINDPOSITION:{
+    		TmpPosition = Gps_u16GetDirection(); /* Get current GPS position */
+    	   	if(TmpPosition==SEEKPOSVAL) /* Initial Position found? */
+    	   	{	
+    	   		/* GPS is searching for position, stay here */
+    	   		u8MtrCurrentState = FINDPOSITION;
+    	   	}else
+    	   	{
+    	   		/* Check for valid data, move forward */
+    	   		u8MtrCurrentState = CHECKIFVALID;
+    	   	}
+    	}break;
+    	case CHECKIFVALID:{
+    	  	if(TmpPosition & VALID_POSMASK) /* Is current direction read valid? */
+    	   	{
+    	   		TmpPosition = TmpPosition & 0x01FF; /* Remove validation bit from MSB */
+    	   		if(TriesCount>0)
+    	   		{
+    	   			TriesCount--;    	   			
+    	   		}else
+    	   		{
+    	   			/*Do nothing */
+    	   		}
+    	   		u8MtrCurrentState = UPSOFT;  /* Go Up softly */
+    	   	}else
+    	   	{	/* Invalid position */
+    	   		if(TriesCount>=MAXINVALIDTRIES) /* is Invalid position detected more than MAXINVALIDTRIES times? */
+    	   		{
+    	   			u8MtrCurrentState = DOWNSOFT;  /* Go down softly */
+    	   		}else
+    	   		{
+    	   			TriesCount++;		
+    	   			u8MtrCurrentState = FINDPOSITION;  /* Check for valid position */
+    	   		}    		
+    	   	}
+    	}break;
+    	case DOWNSOFT:{
+    	   	uint16_t u16TmpSpeed = FAN_GetMotorSpeed(MOTOREL);
+    	   	if(u16TmpSpeed > MINDWNSPEED)
+    	   	{
+    	   		FAN_SetMotorSpeed(MOTOREL, (u16TmpSpeed-MINDWNSPEED));    	   		
+    	   	}else
+    	   	{
+    	   		FAN_SetMotorSpeed(MOTORA, 0);
+    	   		FAN_SetMotorSpeed(MOTORB, 0);
+    	   		FAN_SetMotorSpeed(MOTOREL,0);
+    	   	}
+    	   	if(CURRDISTLEFT<(MINDISTANCELEFT/10))
+    	   	{
+    	   		u8MtrCurrentState=DOWNSOFT;
+    	   	}else
+    	   	{
+    	   		u8MtrCurrentState=FINDPOSITION;
+    	   	}    	   	   	
+    	}break;
+    	case UPSOFT:{
+    		uint16_t u16TmpSpeed = FAN_GetMotorSpeed(MOTOREL);
+    		if((u16TmpSpeed >= 0)&&(u16TmpSpeed < BASESPEED))
+    		{
+    			FAN_SetMotorSpeed(MOTOREL, (u16TmpSpeed + ((uint16_t)BASESPEED>>3)));    			
+    		}else
+    		{
+    		 	/* Do Nothing */
+    		}	
+    		u8MtrCurrentState = INITIAL;  /* Init movement process */
+    	}break;
+    	case INITIAL:{
+    		u16DestPosition = Gps_u16GetDestDirection();
+    		if((u16DestPosition<=359)&&(TmpPosition<=359))
+    		{
+    			if((u16DestPosition > 0)&&(u16DestPosition<=180))
+    			{
+    				u8DestDirection=QUADRANT0;	/* Current position is in range 1 - 180 degrees*/
+    			}else
+    			{
+    				u8DestDirection=QUADRANT1;	/* Current position is in range 181 - 0 degrees */
+    			}
+    			if((TmpPosition > 0)&&(TmpPosition<=180))
+    			{
+    				u8CurrPosition=QUADRANT0;  /* Current position is in range 1 - 180 degrees*/
+    			}else
+    			{
+    				u8CurrPosition=QUADRANT1;  /* Current position is in range 181 - 0 degrees */
+    			}
+    			u8MtrCurrentState=SYSDIR;	/* Get system direction to move */
+    		}else
+    		{	/* Destiny or Current position out of range look for a new position */
+    			u8MtrCurrentState=FINDPOSITION;
+    		}
+    	}break;
+    	case SYSDIR:{
+    		if(u8DestDirection == u8CurrPosition) /*Destiny and current position are in the same quadrant*/
+    		{
+    			if(u8DestDirection>u8CurrPosition)
+    			{u8SystDirection=EAST;}else{/*do nothing */}
+    			if(u8DestDirection<u8CurrPosition)
+    			{u8SystDirection=WEST;}else{/*do nothing */}
+    			if(u8DestDirection==u8CurrPosition)
+    			{u8SystDirection=STRAIGHT;}else{/*do nothing */}
+    		}else{/*Nothing to do*/}
+    		if((u8DestDirection == QUADRANT0)&&(u8CurrPosition==QUADRANT1))
+    		{
+    			u8SystDirection=EAST;
+    		}else{/*Nothing to do*/}
+    		if((u8DestDirection == QUADRANT1)&&(u8CurrPosition==QUADRANT0))
+    		{
+    			u8SystDirection=WEST;
+    		}else{/*Nothing to do*/}    
+    		u8MtrCurrentState=MOVEON;
+    	}break;
+    	case MOVEON:{
+    		if(u8DestDirection==EAST)
+    		{
+    			FAN_SetMotorDirection(MOTORA,SYSDIRECTION,SYSBASESPEED);
+    			FAN_SetMotorDirection(MOTORB,SYSDIRECTION,SYSMAXSPEED);
+    		}else{/*Do Nothing*/}
+    		if(u8DestDirection==WEST)
+    		{
+    			FAN_SetMotorDirection(MOTORB,SYSDIRECTION,SYSBASESPEED);
+    			FAN_SetMotorDirection(MOTORA,SYSDIRECTION,SYSMAXSPEED);
+    		}else{/*Do Nothing*/}
+    		if(u8DestDirection==STRAIGHT)
+    		{
+    			FAN_SetMotorDirection(MOTORB,SYSDIRECTION,SYSBASESPEED);
+    			FAN_SetMotorDirection(MOTORA,SYSDIRECTION,SYSBASESPEED);
+    		}else{/*Do Nothing*/}
+    		u8MtrCurrentState=DISTLEFT;
+    	}break;
+    	case DISTLEFT:{
+    		if(CURRDISTLEFT<MINDISTANCELEFT)
+    		{
+    			u8MtrCurrentState=DOWNSOFT;
+    		}else
+    		{
+    			u8MtrCurrentState=FINDPOSITION;
+    		}
+    	}break;
+    	default:{/* Do nothing */}break;
+    }/*End switch */
+    	        
+    /* Ends Motor control Task */
     printf("Motor Task\n");
     OS_BlockTask();
     }
